@@ -8,27 +8,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16
+      - name: Pull CloudSploit Docker image
+        run: docker pull aquasec/cloudsploit
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run CloudSploit
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Run CloudSploit scan
         run: |
-          mkdir -p reports
-          node index.js --json reports/scan.json || true
+          docker run --rm \
+            -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            aquasec/cloudsploit --json > scan.json
 
-      - name: Upload scan results
+      - name: Upload scan report
         uses: actions/upload-artifact@v4
         with:
           name: cloudsploit-report
-          path: reports/scan.json
+          path: scan.json
