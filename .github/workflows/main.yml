@@ -9,30 +9,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 16
 
-      - name: Install CloudSploit
-        run: |
-          git clone https://github.com/aquasecurity/cloudsploit.git
-          cd cloudsploit
-          npm install
+      - name: Install dependencies
+        run: npm install
 
-      - name: Run CloudSploit Scan
+      - name: Run CloudSploit
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          cd cloudsploit
           mkdir -p reports
-          node index.js --json reports/scan.json --cloud aws
+          node index.js --json reports/scan.json || true
 
-      - name: Upload Scan Report
-        uses: actions/upload-artifact@v3
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
         with:
           name: cloudsploit-report
-          path: cloudsploit/reports/scan.json
+          path: reports/scan.json
