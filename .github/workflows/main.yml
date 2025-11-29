@@ -1,0 +1,38 @@
+name: CloudSploit Scan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install CloudSploit
+        run: |
+          git clone https://github.com/aquasecurity/cloudsploit.git
+          cd cloudsploit
+          npm install
+
+      - name: Run CloudSploit Scan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd cloudsploit
+          mkdir -p reports
+          node index.js --json reports/scan.json --cloud aws
+
+      - name: Upload Scan Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: cloudsploit-report
+          path: cloudsploit/reports/scan.json
